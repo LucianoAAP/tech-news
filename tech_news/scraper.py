@@ -1,6 +1,9 @@
 import requests
 import time
 from parsel import Selector
+from tech_news.database import (
+    create_news, insert_or_update, find_news, search_news, get_collection
+    )
 
 
 # Requisito 1
@@ -40,14 +43,14 @@ def scrape_noticia(html_content):
     title = selector.css('.tec--article__header__title::text').get()
     timestamp = selector.css('time::attr(datetime)').get()
     writer = selector.css('.z--font-bold *::text').get().strip()
-    shares_count = selector.css('.tec--toolbar__item::text').re_first(r'\d')
+    shares_count = selector.css('.tec--toolbar__item::text').re_first(r'\d+')
     if not shares_count:
         shares_count = 0
     else:
         shares_count = int(shares_count)
     comments_count = int(selector.css(
         '#js-comments-btn::attr(data-count)'
-        ).re_first(r'\d'))
+        ).re_first(r'\d+'))
     summary = Selector(text=selector.css('.tec--article__body p').get())
     summary_text = ''.join(summary.css('*::text').getall())
     sources = list(selector.css('.z--mb-16 a::text').getall())
@@ -71,4 +74,23 @@ def scrape_noticia(html_content):
 
 # Requisito 5
 def get_tech_news(amount):
-    """Seu código deve vir aqui"""
+    url = 'https://www.tecmundo.com.br/novidades'
+    news_urls = []
+    news_urls_helper = []
+    news = []
+    while len(news_urls) < amount:
+        html_content = fetch(url)
+        scraped_urls = scrape_novidades(html_content)
+        news_urls_helper.extend(scraped_urls)
+        if len(news_urls_helper) < amount:
+            url = scrape_next_page_link(html_content)
+        if len(news_urls_helper) > amount:
+            news_urls_helper = news_urls_helper[:amount]
+        news_urls = news_urls_helper
+
+    for news_url in news_urls:
+        html_content = fetch(news_url)
+        news.append(scrape_noticia(html_content))
+
+    create_news(news)
+    return news
