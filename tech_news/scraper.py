@@ -1,9 +1,7 @@
 import requests
 import time
 from parsel import Selector
-from tech_news.database import (
-    create_news, insert_or_update, find_news, search_news, get_collection
-    )
+from tech_news.database import create_news
 
 
 # Requisito 1
