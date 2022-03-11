@@ -1,4 +1,3 @@
-from operator import itemgetter
 from tech_news.database import find_news
 
 
@@ -15,8 +14,7 @@ def top_5_news():
             'popularity': popularity})
 
     sorted_news = sorted(
-        formated_news, key=lambda row: (-row['popularity'],
-                                        row['title']))
+        formated_news, key=lambda row: (-row['popularity'], row['title']))
 
     for news_data in sorted_news:
         news_link = (news_data['title'], news_data['url'])
